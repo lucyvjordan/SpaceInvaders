@@ -86,7 +86,6 @@ def mainGame():
                     justMovedDown = True
     
 
-
         win.blit(shipImage, shipLocation)
 
         keys = pygame.key.get_pressed()
@@ -108,17 +107,31 @@ def mainGame():
             projectile[1] -= 5
             # each projectile is drawn and moved up the screen
 
-
-        
-
-
+            touchedInvader = isTouching(projectile, invaderLocations) 
+            # runs a function to check if a projectile is hitting any invader
+            if touchedInvader != []:
+                # if no invader is being touched then the array of coordinates will be empty
+                invaderLocations[touchedInvader[1]].pop((touchedInvader[0]))
+                # the invader at the locations returned from the function is popped (pop allows you to remove an element at a specific index)
+                projectileLocations.remove(projectile)
+                # it also removes the projectile that has hit the invader
+    
         pygame.display.update()
 
 
-
-
-
-
+def isTouching(projectile, invaderLocations):
+    row = 0
+    # the row will be passed back to the main function, showing which array-row the invader belongs to
+    for i in invaderLocations:
+        row += 1
+        for j in range (len(i)-1):
+            if i[j + 1] < projectile[0] < i[j + 1] + 40:
+                if i[0] < projectile[1] < i[0] + 40:
+                    # checks whether the projectile is within the coordinates of the projectile
+                    return [int(j) + 1, int(row)-1]
+                    # returns the row and the position of the invader in the row
+    return []
+    # if there are no collisions, an empty array is returned
 
 mainGame()
 pygame.quit()
