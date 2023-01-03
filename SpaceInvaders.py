@@ -8,8 +8,8 @@ win = pygame.display.set_mode((600,600))
 
 clock = pygame.time.Clock()
 
-invaderImage = pygame.image.load("InvaderIcon.png")
-shipImage = pygame.image.load("PlayerShip.png")
+invaderImage = pygame.image.load("InvaderSprite.png")
+shipImage = pygame.image.load("ShipSprite.png")
 backgroundColour = (0,0,0)
 projectileColour = (255,127,39)
 
@@ -21,15 +21,21 @@ class Statistics():
         self.level = 1
         self.health = 3
         self.points = 0
+        self.speed = 0.5
 
     def levelUp(self):
         self.level += 1
+        if self.speed > 0.1:
+            self.speed -= 0.1
     
     def healthDown(self):
         self.health -= 1
 
     def pointsUp(self):
-        self.points += 2 * self.level
+        if self.level == 5:
+            self.points += 10
+        else:
+            self.points += 2 * self.level
 
     def reset(self):
         self.level = 1
@@ -42,14 +48,15 @@ GameStats = Statistics()
 def mainGame():
     running = True
     direction = "Right"
-    playerLocation = [262.5, 450]
-    invaderLocations = [[0, 40, 80, 120, 160, 200], [50, 40, 80, 120, 160, 200], [100, 40, 80, 120, 160, 200],
-    [150, 40, 80, 120, 160, 200], [200, 40, 80, 120, 160, 200], [250, 40, 80, 120, 160, 200], [300, 40, 80, 120, 160, 200], 
-    [350, 40, 80, 120, 160, 200], [400, 40, 80, 120, 160, 200], [450, 40, 80, 120, 160, 200]]
+    playerLocation = [276, 500]
+    invaderLocations = [[0, 40, 80, 120, 160, 200, 240], [50, 40, 80, 120, 160, 200, 240], [100, 40, 80, 120, 160, 200, 240],
+    [150, 40, 80, 120, 160, 200, 240], [200, 40, 80, 120, 160, 200, 240], [250, 40, 80, 120, 160, 200, 240], [300, 40, 80, 120, 160, 200, 240], 
+    [350, 40, 80, 120, 160, 200, 240], [400, 40, 80, 120, 160, 200, 240], [450, 40, 80, 120, 160, 200, 240]]
     # the first element of each array references the y-coordinate of each invader
     invaderTimer = 0
     playerProjectileTimer = 0
     invaderProjectileTimer = 0
+    invaderAtBottom = False
     justMovedDown = True
     justMovedAcross = False
     playerProjectileLocations = []
@@ -70,25 +77,32 @@ def mainGame():
     
         win.blit(shipImage, playerLocation)
 
+        pygame.draw.rect(win, (97, 109, 200), (0, 495, 600, 1))
+
         pygame.draw.rect(win, (97, 109, 200), (0, 0, 600, 30))
 
         gameFont = pygame.font.SysFont('Consolas', 25)
         healthText = gameFont.render("Health:" + str(GameStats.health), True, (255, 255, 255))
-        win.blit(healthText, (450, 5))
+        win.blit(healthText, (460, 5))
         pointsText = gameFont.render("Points:" + str(GameStats.points), True, (255, 255, 255))
         win.blit(pointsText, (20, 5))
+        levelText = gameFont.render("Level:" + str(GameStats.level), True, (255, 255, 255))
+        levelTextCenter = levelText.get_rect(center = (300, 17))
+        win.blit(levelText, levelTextCenter)
 
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_a] or keys[pygame.K_LEFT]:
-            playerLocation[0] -= 5
-            # the ship is moved left by 5 pixels if a left key is pressed
+            if playerLocation[0] > 10:
+                playerLocation[0] -= 5
+                # the ship is moved left by 5 pixels if a left key is pressed
         if keys[pygame.K_d] or keys[pygame.K_RIGHT]:
-            playerLocation[0] += 5
-            # the ship is moved right by 5 pixels if a right key is pressed           
+            if playerLocation[0] < 515:
+                playerLocation[0] += 5
+                # the ship is moved right by 5 pixels if a right key is pressed           
         if keys[pygame.K_SPACE] and playerProjectileTimer > 0.5:
             # the player can fire a projectile every 0.5 seconds
-            playerProjectileLocations.append([playerLocation[0] + 37, playerLocation[1]])
+            playerProjectileLocations.append([playerLocation[0] + 24, playerLocation[1]])
             playerProjectileTimer = 0
             # a projectile is added to the array at the ships current location if the space bar is clicked
 
@@ -102,7 +116,12 @@ def mainGame():
                 win.blit(invaderImage, (i[0], i[j + 1]))
                 # the y-coordinate is referenced using i[j + 1] in order to skip over the first element which is the x-coordinate
                 # [0.5, 0.4, 0.3, 0.2, 0.1]    
-            if invaderTimer > speed - GameStats.level*speed:
+
+                if i[j+1] + 30 > 495:
+                    invaderAtBottom = True  
+            
+
+            if invaderTimer > GameStats.speed:
                 if direction == "Right":
                     i[0] = i[0] + 5
                     # each x-coordinate is increased by 5
@@ -113,14 +132,18 @@ def mainGame():
                     justMovedAcross = True
                 justMovedDown = False
             else: 
-                justMovedAcross = False            
-                
-            
+                justMovedAcross = False       
+
+
             if len(i) == 1:
                 invaderLocations.remove(i)
                 # this removes it from the array if there are no invaders left in that column
 
-            
+
+        if GameStats.health == 0:
+            gameOver()
+   
+        
         if invaderLocations == []:
             GameStats.levelUp()
             mainGame()
@@ -129,6 +152,8 @@ def mainGame():
             # this resets the movement of the invaders if they have all just moved across
             invaderTimer = 0
         
+        if invaderAtBottom:
+            gameOver()
 
         for i in invaderLocations:
             if i[0] + 40 == 600 and justMovedDown == False:
@@ -136,7 +161,7 @@ def mainGame():
                 direction = "Left"
                 for l in invaderLocations:
                     for j in range (len(l) - 1):
-                        l[j + 1] = l[j + 1] + 10
+                        l[j + 1] = l[j + 1] + 15
                         # the y-coordinate is increased by 10 to move it down the screen
                 justMovedDown = True
 
@@ -145,18 +170,17 @@ def mainGame():
                 direction = "Right"
                 for m in invaderLocations:
                     for j in range (len(m) - 1):
-                        m[j + 1] = m[j + 1] + 10
+                        m[j + 1] = m[j + 1] + 15
                         # the y-coordinate is increased by 10 to move it down the screen
                 justMovedDown = True
-
-        
+   
 
         for projectile in invaderProjectileLocations:
             pygame.draw.rect(win, projectileColour, (projectile[0], projectile[1], 2, 15))
             projectile [1] += 5
 
-            if playerLocation[0] < projectile[0] < playerLocation[0] + 75:
-                if playerLocation[1] < projectile[1] + 15 < playerLocation[1] + 90:
+            if playerLocation[0] < projectile[0] < playerLocation[0] + 48:
+                if playerLocation[1] + 10 < projectile[1] + 15 < playerLocation[1] + 76:
                     # if the player has been hit by an invader's projectile
                     GameStats.healthDown()
                     invaderProjectileLocations.remove(projectile)
@@ -189,7 +213,7 @@ def mainGame():
             projectile[1] -= 5
     
 
-        if invaderProjectileTimer > 0.5:
+        if invaderProjectileTimer > 1:
             # the invaders fire a projectile every 0.5 seconds
             projectileColumn = random.randint(0, len(invaderLocations)-1)
             # a random column is chosen
@@ -199,8 +223,6 @@ def mainGame():
             # the projectile is added to the array - 20 is added to each coordinate so it spawns at the invader's centre
             invaderProjectileTimer = 0
 
-        if GameStats.health == 0:
-            gameOver()
     
         pygame.display.update()
 
@@ -260,7 +282,7 @@ def gameOver():
 
         endFont = pygame.font.SysFont('Consolas', 40)
 
-        endText = endFont.render("Game Over!!!", True, (255,255,255))
+        endText = endFont.render(str(GameStats.points) + " points!", True, (255,255,255))
         endText2 = endFont.render("Play again?", True, (255,255,255))
 
         textLocation = endText.get_rect(center = (300, 200))
