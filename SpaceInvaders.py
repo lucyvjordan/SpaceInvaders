@@ -16,13 +16,33 @@ projectileColour = (255,127,39)
 
 speed = 0.5
 
+class Statistics():
+    def __init__(self):
+        self.level = 1
+        self.health = 3
+        self.points = 0
+
+    def levelUp(self):
+        self.level += 1
+    
+    def healthDown(self):
+        self.health -= 1
+
+    def pointsUp(self):
+        self.points += 2 * self.level
+
+    def reset(self):
+        self.level = 1
+        self.health = 3
+        self.points = 0       
+
+
+GameStats = Statistics()
+
 def mainGame():
     running = True
-    level = 0
     direction = "Right"
     playerLocation = [262.5, 450]
-    playerHealth = 3
-    playerPoints = 0
     invaderLocations = [[0, 40, 80, 120, 160, 200], [50, 40, 80, 120, 160, 200], [100, 40, 80, 120, 160, 200],
     [150, 40, 80, 120, 160, 200], [200, 40, 80, 120, 160, 200], [250, 40, 80, 120, 160, 200], [300, 40, 80, 120, 160, 200], 
     [350, 40, 80, 120, 160, 200], [400, 40, 80, 120, 160, 200], [450, 40, 80, 120, 160, 200]]
@@ -34,8 +54,6 @@ def mainGame():
     justMovedAcross = False
     playerProjectileLocations = []
     invaderProjectileLocations = []
-
-
 
     while running:
         clock.tick(15)
@@ -55,9 +73,9 @@ def mainGame():
         pygame.draw.rect(win, (97, 109, 200), (0, 0, 600, 30))
 
         gameFont = pygame.font.SysFont('Consolas', 25)
-        healthText = gameFont.render("Health:" + str(playerHealth), True, (255, 255, 255))
+        healthText = gameFont.render("Health:" + str(GameStats.health), True, (255, 255, 255))
         win.blit(healthText, (450, 5))
-        pointsText = gameFont.render("Points:" + str(playerPoints), True, (255, 255, 255))
+        pointsText = gameFont.render("Points:" + str(GameStats.points), True, (255, 255, 255))
         win.blit(pointsText, (20, 5))
 
         keys = pygame.key.get_pressed()
@@ -84,7 +102,7 @@ def mainGame():
                 win.blit(invaderImage, (i[0], i[j + 1]))
                 # the y-coordinate is referenced using i[j + 1] in order to skip over the first element which is the x-coordinate
                 # [0.5, 0.4, 0.3, 0.2, 0.1]    
-            if invaderTimer > speed - level*speed:
+            if invaderTimer > speed - GameStats.level*speed:
                 if direction == "Right":
                     i[0] = i[0] + 5
                     # each x-coordinate is increased by 5
@@ -103,7 +121,10 @@ def mainGame():
                 # this removes it from the array if there are no invaders left in that column
 
             
-        
+        if invaderLocations == []:
+            GameStats.levelUp()
+            mainGame()
+
         if justMovedAcross == True:
             # this resets the movement of the invaders if they have all just moved across
             invaderTimer = 0
@@ -137,7 +158,7 @@ def mainGame():
             if playerLocation[0] < projectile[0] < playerLocation[0] + 75:
                 if playerLocation[1] < projectile[1] + 15 < playerLocation[1] + 90:
                     # if the player has been hit by an invader's projectile
-                    playerHealth -= 1
+                    GameStats.healthDown()
                     invaderProjectileLocations.remove(projectile)
 
         
@@ -156,14 +177,12 @@ def mainGame():
                 # the invader at the locations returned from the function is popped (pop allows you to remove an element at a specific index)
                 playerProjectileLocations.remove(projectile)
                 # it also removes the projectile that has hit the invader
-                playerPoints += 2
+                GameStats.pointsUp()
             
             elif touchedProjectile != []:
                 # if no projectiles are touching then the array of coordinates will be empty
                 invaderProjectileLocations.remove(touchedProjectile)
                 # the invader projectile is removed
-                print(projectile)
-                print(playerProjectileLocations)
                 playerProjectileLocations.remove(projectile)
                 # it also removes the player's projectile that has hit the invaders projectile
 
@@ -180,7 +199,7 @@ def mainGame():
             # the projectile is added to the array - 20 is added to each coordinate so it spawns at the invader's centre
             invaderProjectileTimer = 0
 
-        if playerHealth == 0:
+        if GameStats.health == 0:
             gameOver()
     
         pygame.display.update()
@@ -224,6 +243,7 @@ def gameOver():
         if 200 < mouseX < 275 and 325 < mouseY < 400:
             pygame.draw.rect(win, (118,227,149), (200, 325, 75, 75))
             if mouseDown:
+                GameStats.reset()
                 mainGame()
         if 325 < mouseX < 400 and 325 < mouseY < 400:
             pygame.draw.rect(win, (255,99,99), (325, 325, 75, 75))
