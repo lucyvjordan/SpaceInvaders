@@ -1,6 +1,6 @@
 import pygame
 import random
-import time
+import os, sys
 
 pygame.init()
 
@@ -127,7 +127,7 @@ class Game():
                 if event.type == pygame.QUIT:
                     pygame.quit()
 
-            win.blit(pygame.image.load("Images/Background.png"), (0,0))
+            win.blit(pygame.image.load(os.path.join(sys.path[0],"Images/Background.png")), (0,0))
 
             pygame.draw.rect(win, (97, 109, 200), (0, 688, 700, 150))
             pygame.draw.rect(win, (97, 109, 200), (0, 0, 700, 30))
@@ -137,7 +137,7 @@ class Game():
             win.blit(healthText, (500, 5))
 
             for h in range(self.health):
-                win.blit(pygame.image.load("Images/HealthIcon.png"), (605 + h*25, 7))            
+                win.blit(pygame.image.load(os.path.join(sys.path[0],"Images/HealthIcon.png")), (605 + h*25, 7))            
                 # this displays the player's health as a number of hearts (3 down to 0)
             
             pointsText = gameFont.render("Points:" + str(SpaceInvaders.points), True, (255, 255, 255))
@@ -172,7 +172,8 @@ class Game():
             if Invader.explosionLocation != []:
                 # the tuple is empty if there is no explosion to be shown
                 for explosion in Invader.explosionLocation:
-                    win.blit(pygame.image.load(Invader.explosionImages[explosion[-1]]), (explosion[0], explosion[1]))
+
+                    win.blit(pygame.image.load(os.path.join(sys.path[0], Invader.explosionImages[explosion[-1]])), (explosion[0], explosion[1]))
 
 
             win.blit(Player.image, (Player.x, Player.y))
@@ -243,10 +244,10 @@ class Game():
             pygame.display.update()
 
     def checkHighScore(self):
-        with open('HighScores.txt', 'r') as score_file:
+        with open(os.path.join(sys.path[0], 'HighScores.txt'), 'r') as score_file:
             contents = score_file.read()
         if int(contents) < self.points:
-            with open('HighScores.txt', 'w') as score_file:
+            with open(os.path.join(sys.path[0], 'HighScores.txt'), 'w') as score_file:
                 score_file.write(str(self.points))   
             return True
         else:
@@ -259,7 +260,7 @@ SpaceInvaders = Game()
 
 class PlayerShip():
     def __init__(self):
-        self.image = pygame.image.load("Images/ShipSprite.png")
+        self.image = pygame.image.load(os.path.join(sys.path[0],"Images/ShipSprite.png"))
         self.x = 330
         self.y = 700
         self.projectileTimer = 0
@@ -288,12 +289,12 @@ Player = PlayerShip()
 
 class Invaders():
     def __init__(self):
-        self.image1 = pygame.image.load("Images/Invader1.1.png")
-        self.image2 = pygame.image.load("Images/Invader1.2.png")
-        self.image3 = pygame.image.load("Images/Invader2.1.png")
-        self.image4 = pygame.image.load("Images/Invader2.2.png")
-        self.image5 = pygame.image.load("Images/Invader3.1.png")
-        self.image6 = pygame.image.load("Images/Invader3.2.png")
+        self.image1 = pygame.image.load(os.path.join(sys.path[0],"Images/Invader1.1.png"))
+        self.image2 = pygame.image.load(os.path.join(sys.path[0],"Images/Invader1.2.png"))
+        self.image3 = pygame.image.load(os.path.join(sys.path[0],"Images/Invader2.1.png"))
+        self.image4 = pygame.image.load(os.path.join(sys.path[0],"Images/Invader2.2.png"))
+        self.image5 = pygame.image.load(os.path.join(sys.path[0],"Images/Invader3.1.png"))
+        self.image6 = pygame.image.load(os.path.join(sys.path[0],"Images/Invader3.2.png"))
         self.invaderLocations = [[0, 1, 2, 3, 4, 5], [50, 1, 2, 3, 4, 5], [100, 1, 2, 3, 4, 5],
         [150, 1, 2, 3, 4, 5], [200, 1, 2, 3, 4, 5], [250, 1, 2, 3, 4, 5], [300, 1, 2, 3, 4, 5], 
         [350, 1, 2, 3, 4, 5], [400, 1, 2, 3, 4, 5], [450, 1, 2, 3, 4, 5], [500, 1, 2, 3, 4, 5]]
@@ -378,7 +379,7 @@ class UFOs():
     def __init__(self):
         self.location = [-100, 50]
         self.timer = 0
-        self.image = pygame.image.load("Images/UFOSprite.png")
+        self.image = pygame.image.load(os.path.join(sys.path[0],"Images/UFOSprite.png"))
         
     def move(self):
         if self.timer > 15:
